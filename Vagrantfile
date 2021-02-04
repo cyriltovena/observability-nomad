@@ -14,7 +14,7 @@ sudo add-apt-repository \
       $(lsb_release -cs) \
       stable"
 sudo apt-get update
-sudo apt-get install -y docker-ce
+sudo apt-get install -y docker-ce ntp
 # Restart docker to make sure we get the latest version of the daemon if there is an upgrade
 sudo service docker restart
 # Make sure we can actually use docker as the vagrant user
@@ -131,4 +131,11 @@ Vagrant.configure(2) do |config|
       v.vmx["memsize"] = "2048"
     end
   end
+
+  # Set the timezone the same as the host so that metrics & logs ingested have the right timestamp.
+  require 'time'
+  offset = ((Time.zone_offset(Time.now.zone) / 60) / 60)
+  timezone_suffix = offset >= 0 ? "-#{offset.to_s}" : "+#{offset.to_s}"
+  timezone = 'Etc/GMT' + timezone_suffix
+  config.vm.provision :shell, :inline => "sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/" + timezone + " /etc/localtime", run: "always"
 end

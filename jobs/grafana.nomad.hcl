@@ -56,21 +56,14 @@ datasources:
 EOTC
         destination = "/local/grafana/provisioning/datasources/ds.yaml"
       }
-      template {
-        data        = <<EOTC
-apiVersion: 1
-providers:
-- name: dashboards
-  type: file
-  updateIntervalSeconds: 30
-  options:
-    path: /local/grafana/dashboards
-    foldersFromFilesStructure: true
-EOTC
+      artifact {
+        source      = "https://raw.githubusercontent.com/cyriltovena/observability-nomad/main/provisioning/dashboard.yaml"
+        mode        = "file"
         destination = "/local/grafana/provisioning/dashboards/dashboard.yaml"
       }
       artifact {
-        source      = "https://gist.githubusercontent.com/cyriltovena/6c755356417196bb9ee401262f06a303/raw/1eb96b31cef43097617eff43d7ee805ad0c09572/nomad-dashboard.json"
+        source = "https://raw.githubusercontent.com/cyriltovena/observability-nomad/main/provisioning/dashboard.json"
+        mode   = "file"
         destination = "/local/grafana/dashboards/tns.json"
       }
 

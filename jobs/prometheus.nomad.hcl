@@ -25,6 +25,8 @@ job "prometheus" {
 
       template {
         data        = <<EOTC
+global:
+  scrape_interval: 15s
 scrape_configs:
   - job_name: 'self'
     consul_sd_configs:
@@ -33,6 +35,10 @@ scrape_configs:
       - source_labels: [__meta_consul_service_metadata_external_source]
         target_label: source
         regex: (.*)
+        replacement: '$1'
+      - source_labels: [__meta_consul_service_id]
+        regex: '_nomad-task-(.*)-(.*)-(.*)-(.*)'
+        target_label:  'task_id'
         replacement: '$1'
       - source_labels: [__meta_consul_tags]
         regex: ',(app|monitoring),'
