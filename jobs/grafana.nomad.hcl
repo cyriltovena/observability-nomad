@@ -43,6 +43,11 @@ datasources:
     type: prometheus
     access: proxy
     url: http://prometheus.service.dc1.consul:9090
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo-query.service.dc1.consul:16686
+    uid: tempo
   - name: Loki
     type: loki
     access: proxy
