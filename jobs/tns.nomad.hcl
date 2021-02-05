@@ -6,6 +6,9 @@ job "tns" {
     count = 1
 
     network {
+      dns {
+        servers = ["172.17.0.1", "8.8.8.8", "8.8.4.4"]
+      }
       port "db" {
         static = 8000
       }
@@ -28,7 +31,12 @@ job "tns" {
 
     task "db" {
       driver = "docker"
-
+      env {
+        JAEGER_AGENT_HOST    = "tempo.service.dc1.consul"
+        JAEGER_TAGS          = "cluster=nomad"
+        JAEGER_SAMPLER_TYPE  = "probabilistic"
+        JAEGER_SAMPLER_PARAM = "1"
+      }
       config {
         image = "grafana/tns-db"
         ports = ["db"]
@@ -48,7 +56,12 @@ job "tns" {
 
     task "app" {
       driver = "docker"
-
+      env {
+        JAEGER_AGENT_HOST    = "tempo.service.dc1.consul"
+        JAEGER_TAGS          = "cluster=nomad"
+        JAEGER_SAMPLER_TYPE  = "probabilistic"
+        JAEGER_SAMPLER_PARAM = "1"
+      }
       config {
         image = "grafana/tns-app"
         ports = ["app"]
@@ -69,7 +82,12 @@ job "tns" {
 
     task "loadgen" {
       driver = "docker"
-
+      env {
+        JAEGER_AGENT_HOST    = "tempo.service.dc1.consul"
+        JAEGER_TAGS          = "cluster=nomad"
+        JAEGER_SAMPLER_TYPE  = "probabilistic"
+        JAEGER_SAMPLER_PARAM = "1"
+      }
       config {
         image = "grafana/tns-loadgen"
         ports = ["loadgen"]

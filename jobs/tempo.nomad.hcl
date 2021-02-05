@@ -13,6 +13,9 @@ job "tempo" {
       port "query" {
         static = "16686"
       }
+      port "tempo-write" {
+        static = "6831"
+      }
     }
 
     restart {
@@ -31,7 +34,7 @@ job "tempo" {
       }
       config {
         image = "grafana/tempo"
-        ports = ["tempo"]
+        ports = ["tempo", "tempo-write"]
         args = [
           "-config.file=/local/tempo.yml",
           "-server.http-listen-port=${NOMAD_PORT_tempo}",
@@ -67,20 +70,13 @@ job "tempo" {
     task "tempo-query" {
       driver = "docker"
 
-
-      template {
-        data        = <<EOTC
-backend: "tempo.service.dc1.consul:${NOMAD_PORT_tempo}"
-EOTC
-        destination = "/local/tempo-query.yml"
+      env {
+        BACKEND = "tempo.service.dc1.consul:${NOMAD_PORT_tempo}"
       }
 
       config {
         image = "grafana/tempo-query"
         ports = ["query"]
-        args = [
-          "--grpc-storage-plugin.configuration-file=/local/tempo-query.yml",
-        ]
       }
 
       resources {
