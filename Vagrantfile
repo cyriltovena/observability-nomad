@@ -70,6 +70,20 @@ do
 done
 nomad -autocomplete-install
 sudo mkdir -p /opt/nomad/data/
+sudo mkdir -p /etc/nomad/
+(
+cat <<-EOF
+  data_dir  = "/opt/nomad/data/"
+  bind_addr = "0.0.0.0"
+  plugin "docker" {
+    config {
+      volumes {
+        enabled = true
+      }
+    }
+  }
+EOF
+  ) | sudo tee /etc/nomad/config.hcl
 (
 cat <<-EOF
   [Unit]
@@ -80,7 +94,7 @@ cat <<-EOF
   [Service]
   Environment=PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   Restart=on-failure
-  ExecStart=/usr/bin/nomad agent -dev-connect -bind=0.0.0.0 -data-dir=/opt/nomad/data/
+  ExecStart=/usr/bin/nomad agent -dev-connect -config=/etc/nomad/config.hcl
   ExecReload=/bin/kill -HUP $MAINPID
 
   [Install]
@@ -112,6 +126,8 @@ Vagrant.configure(2) do |config|
   config.vm.network "forwarded_port", guest: 9090, host: 9090
   # loki
   config.vm.network "forwarded_port", guest: 3100, host: 3100
+  # promtail
+  config.vm.network "forwarded_port", guest: 3200, host: 3200
   # tns app
   config.vm.network "forwarded_port", guest: 8001, host: 8001
 

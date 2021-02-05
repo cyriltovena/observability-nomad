@@ -24,7 +24,7 @@ job "grafana" {
       driver = "docker"
 
       config {
-        image = "grafana/grafana"
+        image = "grafana/grafana-dev:7.5.0-11433pre-ubuntu"
         ports = ["http"]
       }
 
@@ -62,8 +62,8 @@ EOTC
         destination = "/local/grafana/provisioning/dashboards/dashboard.yaml"
       }
       artifact {
-        source = "https://raw.githubusercontent.com/cyriltovena/observability-nomad/main/provisioning/dashboard.json"
-        mode   = "file"
+        source      = "https://raw.githubusercontent.com/cyriltovena/observability-nomad/main/provisioning/dashboard.json"
+        mode        = "file"
         destination = "/local/grafana/dashboards/tns.json"
       }
 
