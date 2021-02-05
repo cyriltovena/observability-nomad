@@ -43,6 +43,10 @@ datasources:
     type: prometheus
     access: proxy
     url: http://prometheus.service.dc1.consul:9090
+    jsonData:
+      exemplarTraceIdDestinations:
+      - name: traceID
+        datasourceUid: tempo
   - name: Tempo
     type: tempo
     access: proxy
