@@ -1,11 +1,26 @@
 # Adding Observability to Nomad Applications
 
+This repository demonstrates how you can leverage the [Grafana Open Source Observability Stack][oss-grafana] with [Nomad][nomad] workload.
 
-nomad ui: http://localhost:4646/
+For simplicity you'll need vagrant
 
-consul ui: http://localhost:8500/ui
+To get started simply run:
 
-## Requirements
+```bash
+vagrant up
+```
+
+Then you should be able to access:
+
+- Grafana => http://127.0.0.1:3000/
+- Nomad   => http://127.0.0.1:4646/
+- Consul  => http://127.0.0.1:8500/ui
+
+You can go to the Nomad UI Jobs page to see all running jobs.
+
+![alt text][nomad-grafana]
+
+## Nomad Client Configuration
 
 [Promtail][promtail] need to access host logs folder. (alloc/{task_id}/logs)
 By default the docker driver in nomad doesn't allow mounting volumes.
@@ -28,3 +43,7 @@ Again in this example we're using a host path mounted in the container to persis
 
 [promtail]: https://grafana.com/docs/loki/latest/clients/promtail/
 [host_volume]: https://www.nomadproject.io/docs/configuration/client#host_volume-stanza
+[nomad]: https://www.nomadproject.io/
+[oss-grafana]: https://grafana.com/oss/
+[vagrant]: https://www.vagrantup.com/
+[nomad-grafana]: ./doc/nomad-grafana.png

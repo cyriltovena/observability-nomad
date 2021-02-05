@@ -109,6 +109,16 @@ sudo iptables -t nat -A PREROUTING -p udp -m udp --dport 53 -j REDIRECT --to-por
 sudo iptables -t nat -A PREROUTING -p tcp -m tcp --dport 53 -j REDIRECT --to-ports 8600
 sudo iptables -t nat -A OUTPUT -d localhost -p udp -m udp --dport 53 -j REDIRECT --to-ports 8600
 sudo iptables -t nat -A OUTPUT -d localhost -p tcp -m tcp --dport 53 -j REDIRECT --to-ports 8600
+
+echo "Installing Grafana stack..."
+
+until nomad status
+do
+  echo "Waiting nomad to be ready...."
+  sleep 3
+done
+
+find /vagrant/jobs/*.hcl -maxdepth 0 | xargs -L 1 nomad job run
 SCRIPT
 
 Vagrant.configure(2) do |config|

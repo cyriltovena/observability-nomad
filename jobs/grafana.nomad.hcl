@@ -57,7 +57,7 @@ datasources:
         - datasourceUid: tempo
           matcherRegex: (?:traceID|trace_id)=(\w+)
           name: TraceID
-          url: $${__value.raw}
+          url: $$${__value.raw}
 EOTC
         destination = "/local/grafana/provisioning/datasources/ds.yaml"
       }
