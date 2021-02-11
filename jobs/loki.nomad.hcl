@@ -23,6 +23,13 @@ job "loki" {
     task "loki" {
       driver = "docker"
 
+      env {
+        JAEGER_AGENT_HOST    = "tempo.service.dc1.consul"
+        JAEGER_TAGS          = "cluster=nomad"
+        JAEGER_SAMPLER_TYPE  = "probabilistic"
+        JAEGER_SAMPLER_PARAM = "1"
+      }
+
       config {
         image = "grafana/loki"
         ports = ["http"]
