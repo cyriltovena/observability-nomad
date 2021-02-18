@@ -2,7 +2,25 @@
 
 This repository demonstrates how you can leverage the [Grafana Open Source Observability Stack][oss-grafana] with [Nomad][nomad] workload.
 
-For simplicity you'll need vagrant
+In this demonstration we will deploy an application ([TNS][TNS]) on [Nomad][nomad] along with the [Grafana Stack][oss-grafana]. The [TNS][TNS] application is written in Go and instrumented with:
+
+- Prometheus **Metrics** using [client_golang][client_golang].
+- **Logs** using [gokit][gokit] (output format is [logfmt][logfmt]).
+- **Traces** using [jaeguer go client][jaeguer_client].
+
+> You can use the instrumentation of your choice such as: [OpenTelemetry][OpenTelemetry], [Zipkin][Zipkin], json logs...
+
+We'll also deploy backends to store collected signals:
+
+- [Prometheus][Prometheus] will scrape **Metrics** using the scrape endpoint.
+- [Loki][Loki] will receive **Logs** collected by [Promtail][promtail].
+- [Tempo][Tempo] will directly receives **Traces** and Spans.
+
+Finally, we'll deploy [Grafana][oss-grafana] and [provision](provisioning/) it with all our backend datasources and a dashboard to start with.
+
+## Getting Started
+
+For simplicity you'll need to install and configure [vagrant][vagrant].
 
 To get started simply run:
 
@@ -12,9 +30,12 @@ vagrant up
 
 Then you should be able to access:
 
-- Grafana => http://127.0.0.1:3000/
+- TNS app => http://127.0.0.1:8001/
 - Nomad   => http://127.0.0.1:4646/
 - Consul  => http://127.0.0.1:8500/ui
+- Grafana => http://127.0.0.1:3000/
+- Prometheus => http://127.0.0.1:9090/
+- Promtail => http://127.0.0.1:3200/
 
 You can go to the Nomad UI Jobs page to see all running jobs.
 
@@ -47,3 +68,13 @@ Again in this example we're using a host path mounted in the container to persis
 [oss-grafana]: https://grafana.com/oss/
 [vagrant]: https://www.vagrantup.com/
 [nomad-grafana]: ./doc/nomad-grafana.png
+[client_golang]: https://github.com/prometheus/client_golang
+[TNS]: https://github.com/grafana/tns
+[gokit]: https://github.com/go-kit/kit/tree/master/log
+[jaeguer_client]: https://github.com/jaegertracing/jaeger-client-go
+[logfmt]: https://brandur.org/logfmt
+[OpenTelemetry]: https://opentelemetry.io/
+[Zipkin]: https://zipkin.io/
+[Prometheus]: https://prometheus.io/
+[Loki]: https://grafana.com/oss/loki/
+[Tempo]: https://grafana.com/oss/tempo/
