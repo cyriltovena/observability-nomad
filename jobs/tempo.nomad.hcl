@@ -9,9 +9,8 @@ job "tempo" {
       dns {
         servers = ["172.17.0.1", "8.8.8.8", "8.8.4.4"]
       }
-      port "tempo" {}
-      port "query" {
-        static = "16686"
+      port "tempo" {
+          static = "3400"
       }
       port "tempo-write" {
         static = "6831"
@@ -26,6 +25,13 @@ job "tempo" {
 
     task "tempo" {
       driver = "docker"
+
+      env {
+        JAEGER_AGENT_HOST    = "tempo.service.dc1.consul"
+        JAEGER_TAGS          = "cluster=nomad"
+        JAEGER_SAMPLER_TYPE  = "probabilistic"
+        JAEGER_SAMPLER_PARAM = "1"
+      }
 
       artifact {
         source      = "https://raw.githubusercontent.com/grafana/tempo/master/example/docker-compose/etc/tempo-local.yaml"
@@ -53,44 +59,6 @@ job "tempo" {
 
         check {
           name     = "Tempo HTTP"
-          type     = "http"
-          path     = "/ready"
-          interval = "5s"
-          timeout  = "2s"
-
-          check_restart {
-            limit           = 2
-            grace           = "60s"
-            ignore_warnings = false
-          }
-        }
-      }
-    }
-
-    task "tempo-query" {
-      driver = "docker"
-
-      env {
-        BACKEND = "tempo.service.dc1.consul:${NOMAD_PORT_tempo}"
-      }
-
-      config {
-        image = "grafana/tempo-query"
-        ports = ["query"]
-      }
-
-      resources {
-        cpu    = 200
-        memory = 200
-      }
-
-      service {
-        name = "tempo-query"
-        port = "query"
-        tags = ["monitoring"]
-
-        check {
-          name     = "Tempo Query HTTP"
           type     = "http"
           path     = "/ready"
           interval = "5s"

@@ -24,7 +24,7 @@ job "grafana" {
       driver = "docker"
 
       config {
-        image = "grafana/grafana-dev:7.5.0-11433pre-ubuntu"
+        image = "grafana/grafana:7.5.1"
         ports = ["http"]
       }
 
@@ -50,7 +50,7 @@ datasources:
   - name: Tempo
     type: tempo
     access: proxy
-    url: http://tempo-query.service.dc1.consul:16686
+    url: http://tempo.service.dc1.consul:3400/tempo
     uid: tempo
   - name: Loki
     type: loki
