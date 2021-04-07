@@ -1,5 +1,7 @@
 # Adding Observability to Nomad Applications
 
+> Recording of the demo is available on the [hashitalk 2021 website](https://www.hashicorp.com/resources/adding-observability-to-hashicorp-nomad-applications-with-grafana). ([slides](https://docs.google.com/presentation/d/1CSWKew4ID0oKBnQpR-3wUUyF8XpIIPzwzSLsc61yZL8/edit#slide=id.gbc349f7587_0_60))
+
 This repository demonstrates how you can leverage the [Grafana Open Source Observability Stack][oss-grafana] with [Nomad][nomad] workload.
 
 In this demonstration we will deploy an application ([TNS][TNS]) on [Nomad][nomad] along with the [Grafana Stack][oss-grafana]. The [TNS][TNS] application is written in Go and instrumented with:
