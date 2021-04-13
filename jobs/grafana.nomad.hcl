@@ -50,7 +50,7 @@ datasources:
   - name: Tempo
     type: tempo
     access: proxy
-    url: http://tempo.service.dc1.consul:3400/tempo
+    url: http://tempo.service.dc1.consul:3400
     uid: tempo
   - name: Loki
     type: loki
