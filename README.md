@@ -80,3 +80,13 @@ Again in this example we're using a host path mounted in the container to persis
 [Prometheus]: https://prometheus.io/
 [Loki]: https://grafana.com/oss/loki/
 [Tempo]: https://grafana.com/oss/tempo/
+
+## Troubleshooting
+
+### Grafana shows nothing or TNS keeps crashing because of it can't connect to Tempo
+
+- You may have troubles with your `dns` configuration in the jobs, if your jobs can't talks to each other tries to change the ip to `127.0.0.1` or the internal ip address of your server if using a `VPC` or just removes the `dns` stanza. It's recommanded to use [Consul Connect](https://www.consul.io/docs/connect) to connect every services to each others.
+
+### I can't see the logs in Grafana/Loki
+
+- You may have a different `data_dir` config in your `nomad` configuration. Here it's using `/opt/nomad/data` while we generally sets `/opt/nomad`. If it's your case, change the `volume` stanza of your `tempo` job.
