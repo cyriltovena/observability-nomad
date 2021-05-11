@@ -110,6 +110,10 @@ sudo iptables -t nat -A PREROUTING -p tcp -m tcp --dport 53 -j REDIRECT --to-por
 sudo iptables -t nat -A OUTPUT -d localhost -p udp -m udp --dport 53 -j REDIRECT --to-ports 8600
 sudo iptables -t nat -A OUTPUT -d localhost -p tcp -m tcp --dport 53 -j REDIRECT --to-ports 8600
 
+echo "Pulling Docker images"
+
+find /vagrant/jobs/*.hcl -maxdepth 0 | xargs grep -E 'image\s*=\s*' | awk '{print $NF}' | sed -e 's/"//g' | xargs -L 1 sudo docker pull
+
 echo "Installing Grafana stack..."
 
 until nomad status
