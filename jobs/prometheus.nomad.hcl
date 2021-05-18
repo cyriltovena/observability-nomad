@@ -37,7 +37,7 @@ scrape_configs:
         regex: (.*)
         replacement: '$1'
       - source_labels: [__meta_consul_service_id]
-        regex: '_nomad-task-(.*)-(.*)-(.*)-(.*)'
+        regex: '_nomad-task-([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})-.*'
         target_label:  'task_id'
         replacement: '$1'
       - source_labels: [__meta_consul_tags]
