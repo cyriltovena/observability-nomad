@@ -25,7 +25,7 @@ sudo docker --version
 sudo apt-get install unzip curl vim -y
 
 echo "Installing Nomad..."
-NOMAD_VERSION=1.0.3
+NOMAD_VERSION=1.0.5
 cd /tmp/
 curl -sSL https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip -o nomad.zip
 unzip nomad.zip
@@ -34,12 +34,13 @@ sudo mkdir -p /etc/nomad.d
 sudo chmod a+w /etc/nomad.d
 
 echo "Installing CNI plugins..."
-curl -sL -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.1/cni-plugins-linux-amd64-v0.8.1.tgz
+CNI_VERSION=0.9.1
+curl -sL -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v${CNI_VERSION}/cni-plugins-linux-amd64-v${CNI_VERSION}.tgz
 sudo mkdir -p /opt/cni/bin
 sudo tar -C /opt/cni/bin -xzf cni-plugins.tgz
 
 echo "Installing Consul..."
-CONSUL_VERSION=1.9.0
+CONSUL_VERSION=1.9.5
 curl -sSL https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip > consul.zip
 unzip /tmp/consul.zip
 sudo install consul /usr/bin/consul
