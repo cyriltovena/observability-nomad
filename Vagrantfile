@@ -31,7 +31,10 @@ if ! curl --fail -sSL https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/noma
   echo "Failed to download Nomad $NOMAD_VERSION"
   exit 1
 fi
-unzip nomad.zip
+if ! unzip -q nomad.zip; then
+  echo "Failed to extract Nomad $NOMAD_VERSION"
+  exit 1
+fi
 sudo install nomad /usr/bin/nomad
 sudo mkdir -p /etc/nomad.d
 sudo chmod a+w /etc/nomad.d
@@ -51,7 +54,10 @@ if ! curl --fail -sSL https://releases.hashicorp.com/consul/${CONSUL_VERSION}/co
   echo "Failed to download Consul $CONSUL_VERSION"
   exit 1
 fi
-unzip /tmp/consul.zip
+if ! unzip -q /tmp/consul.zip; then
+  echo "Failed to extract Consul $CONSUL_VERSION"
+  exit 1
+fi
 sudo install consul /usr/bin/consul
 (
 cat <<-EOF
