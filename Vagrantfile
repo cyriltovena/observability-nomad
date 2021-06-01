@@ -142,9 +142,10 @@ do
 done
 
 # Handle all Nomad job files one at a time
-find /vagrant/jobs -maxdepth 1 -type f -name '*.hcl' | while read j; do
+# Use the naming of Nomad job files to determine scheduling order of services
+find /vagrant/jobs -maxdepth 1 -type f -name '*.hcl' | sort | while read j; do
   # Job can be successfully planed (enough resources left)
-  svc=$(basename $j | sed -e 's/\.nomad\.hcl//')
+  svc=$(basename $j | sed -e 's/\.nomad\.hcl//' -e 's/^[0-9][0-9]-//')
   if nomad plan $j | grep -Eq 'All tasks successfully allocated'; then
     echo "Scheduling $svc"
     nomad run $j
