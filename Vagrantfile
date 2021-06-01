@@ -113,7 +113,10 @@ sudo iptables -t nat -A OUTPUT -d localhost -p tcp -m tcp --dport 53 -j REDIRECT
 
 echo "Pulling Docker images"
 
-find /vagrant/jobs/*.hcl -maxdepth 0 | xargs grep -E 'image\s*=\s*' | awk '{print $NF}' | sed -e 's/"//g' | xargs -L 1 sudo docker pull
+find /vagrant/jobs -maxdepth 1 -type f -name '*.hcl' | xargs grep -E 'image\s*=\s*' | awk '{print $NF}' | sed -e 's/"//g' | while read j; do
+  echo "Pulling $j Docker image"
+  sudo docker pull $j >/dev/null
+done
 
 echo "Installing Grafana stack..."
 
