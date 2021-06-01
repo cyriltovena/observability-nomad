@@ -123,7 +123,17 @@ do
   sleep 3
 done
 
-find /vagrant/jobs/*.hcl -maxdepth 0 | xargs -L 1 nomad job run
+# Handle all Nomad job files one at a time
+find /vagrant/jobs -maxdepth 1 -type f -name '*.hcl' | while read j; do
+  # Job can be successfully planed (enough resources left)
+  svc=$(basename $j | sed -e 's/\.nomad\.hcl//')
+  if nomad plan $j | grep -Eq 'All tasks successfully allocated'; then
+    echo "Scheduling $svc"
+    nomad run $j
+  else
+    echo "Error can not schedule $svc"
+  fi
+done
 SCRIPT
 
 Vagrant.configure(2) do |config|
