@@ -130,7 +130,7 @@ echo "Pulling Docker images"
 
 if [ -n "$DOCKERHUBID" ] && [ -n "$DOCKERHUBPASSWD" ]; then
   echo "Login to Docker Hub as $DOCKERHUBID"
-  if ! sudo docker login --username "$DOCKERHUBID" --password "$DOCKERHUBPASSWD"; then
+  if ! echo "$DOCKERHUBPASSWD" | sudo docker login --username "$DOCKERHUBID" --password-stdin; then
     echo 'Error login to Docker Hub'
     exit 2
   fi
