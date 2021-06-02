@@ -99,6 +99,13 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+if [ -n "$DOCKERHUBID" ] && [ -n "$DOCKERHUBPASSWD" ]; then
+  echo "Logout from Docker Hub as $DOCKERHUBID"
+  if ! sudo docker logout; then
+    echo 'Error logging out from Docker Hub'
+  fi
+fi
+
 echo "Installing Grafana stack..."
 
 until nomad status
