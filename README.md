@@ -30,14 +30,21 @@ To get started simply run:
 vagrant up
 ```
 
+In case you want a faster startup not based on Ubuntu but on Flatcar Linux (as CoreOS has been EOLed):
+
+```
+VAGRANT_VAGRANTFILE=Vagrantfile.flatcar vagrant up
+```
+
 Then you should be able to access:
 
-- TNS app => http://127.0.0.1:8001/
-- Nomad   => http://127.0.0.1:4646/
-- Consul  => http://127.0.0.1:8500/ui
-- Grafana => http://127.0.0.1:3000/
+- TNS app    => http://127.0.0.1:8001/
+- Nomad      => http://127.0.0.1:4646/ui/
+- Consul     => http://127.0.0.1:8500/ui/
+- Grafana    => http://127.0.0.1:3000/
 - Prometheus => http://127.0.0.1:9090/
-- Promtail => http://127.0.0.1:3200/
+- Promtail   => http://127.0.0.1:3200/
+- Loki       => http://127.0.0.1:3100/
 
 You can go to the Nomad UI Jobs page to see all running jobs.
 

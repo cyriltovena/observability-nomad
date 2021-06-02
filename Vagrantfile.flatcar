@@ -2,28 +2,9 @@
 # vi: set ft=ruby :
 
 $script = <<SCRIPT
-echo "Installing Docker..."
-sudo apt-get update
-sudo apt-get remove docker docker-engine docker.io
-echo '* libraries/restart-without-asking boolean true' | sudo debconf-set-selections
-sudo apt-get install apt-transport-https ca-certificates curl software-properties-common -y
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg |  sudo apt-key add -
-sudo apt-key fingerprint 0EBFCD88
-sudo add-apt-repository \
-      "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-      $(lsb_release -cs) \
-      stable"
-sudo apt-get update
-sudo apt-get install -y docker-ce ntp
-# Restart docker to make sure we get the latest version of the daemon if there is an upgrade
-sudo service docker restart
-# Make sure we can actually use docker as the vagrant user
-sudo usermod -aG docker vagrant
-sudo docker --version
-
-# Packages required for nomad & consul
-sudo apt-get install unzip curl vim -y
-
+#
+# Nomad 1.x required due to Nomad jobs manifests
+#
 echo "Installing Nomad..."
 NOMAD_VERSION=1.0.5
 cd /tmp/
@@ -35,30 +16,10 @@ if ! unzip -q nomad.zip; then
   echo "Failed to extract Nomad $NOMAD_VERSION"
   exit 1
 fi
-sudo install nomad /usr/bin/nomad
-sudo mkdir -p /etc/nomad.d
-sudo chmod a+w /etc/nomad.d
-
-echo "Installing CNI plugins..."
-CNI_VERSION=0.9.1
-if ! curl --fail -sL -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v${CNI_VERSION}/cni-plugins-linux-amd64-v${CNI_VERSION}.tgz 2>/dev/null; then
-  echo "Failed to download CNI plugins $CNI_VERSION"
-  exit 1
-fi
-sudo mkdir -p /opt/cni/bin
-sudo tar -C /opt/cni/bin -xzf cni-plugins.tgz
-
-echo "Installing Consul..."
-CONSUL_VERSION=1.9.5
-if ! curl --fail -sSL https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip > consul.zip 2>/dev/null; then
-  echo "Failed to download Consul $CONSUL_VERSION"
-  exit 1
-fi
-if ! unzip -q /tmp/consul.zip; then
-  echo "Failed to extract Consul $CONSUL_VERSION"
-  exit 1
-fi
-sudo install consul /usr/bin/consul
+sudo install nomad /opt/bin/nomad
+sudo mkdir -p /etc/nomad.d /etc/nomad /opt/nomad/data/
+# Error due to Flatcar default filesystems permissons restrictions
+#nomad -autocomplete-install
 (
 cat <<-EOF
   [Unit]
@@ -68,7 +29,7 @@ cat <<-EOF
 
   [Service]
   Restart=on-failure
-  ExecStart=/usr/bin/consul agent -dev -client=0.0.0.0
+  ExecStart=/opt/bin/consul agent -dev -client=0.0.0.0
   ExecReload=/bin/kill -HUP $MAINPID
 
   [Install]
@@ -78,15 +39,6 @@ EOF
 sudo systemctl enable consul.service
 sudo systemctl start consul
 
-for bin in cfssl cfssl-certinfo cfssljson
-do
-  echo "Installing $bin..."
-  curl -sSL https://pkg.cfssl.org/R1.2/${bin}_linux-amd64 > /tmp/${bin}
-  sudo install /tmp/${bin} /usr/local/bin/${bin}
-done
-nomad -autocomplete-install
-sudo mkdir -p /opt/nomad/data/
-sudo mkdir -p /etc/nomad/
 (
 cat <<-EOF
   data_dir  = "/opt/nomad/data/"
@@ -108,9 +60,9 @@ cat <<-EOF
   After=network-online.target
 
   [Service]
-  Environment=PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  Environment=PATH=/opt/bin:/usr/sbin:/usr/bin:/sbin:/bin
   Restart=on-failure
-  ExecStart=/usr/bin/nomad agent -dev-connect -config=/etc/nomad/config.hcl
+  ExecStart=/opt/bin/nomad agent -dev-connect -config=/etc/nomad/config.hcl
   ExecReload=/bin/kill -HUP $MAINPID
 
   [Install]
@@ -128,7 +80,7 @@ sudo iptables -t nat -A OUTPUT -d localhost -p tcp -m tcp --dport 53 -j REDIRECT
 
 echo "Pulling Docker images"
 
-find /vagrant/jobs -maxdepth 1 -type f -name '*.hcl' | xargs grep -E 'image\s*=\s*' | awk '{print $NF}' | sed -e 's/"//g' | while read j; do
+find /tmp/jobs -maxdepth 1 -type f -name '*.hcl' | xargs grep -E 'image\s*=\s*' | awk '{print $NF}' | sed -e 's/"//g' | while read j; do
   echo "Pulling $j Docker image"
   if ! sudo docker pull $j >/dev/null; then
     echo "Exiting"
@@ -149,7 +101,7 @@ done
 
 # Handle all Nomad job files one at a time
 # Use the naming of Nomad job files to determine scheduling order of services
-find /vagrant/jobs -maxdepth 1 -type f -name '*.hcl' | sort | while read j; do
+find /tmp/jobs -maxdepth 1 -type f -name '*.hcl' | sort | while read j; do
   # Job can be successfully planed (enough resources left)
   svc=$(basename $j | sed -e 's/\.nomad\.hcl//' -e 's/^[0-9][0-9]-//')
   if nomad plan $j | grep -Eq 'All tasks successfully allocated'; then
@@ -162,8 +114,73 @@ done
 SCRIPT
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "bento/ubuntu-18.04" # 18.04 LTS
-  config.vm.hostname = "ubuntu-nomad"
+  #
+  # Get local host timezone
+  # PLEASE NOTE: the result can be tricked if you have any VPN
+  # or system-wide HTTP proxy configured on your Vagrant host
+  #
+  # PLEASE ALSO NOTE: the service at ipapi.co is protected from DDos
+  # by CloudFlare and therefore it might happen that you'll be denied
+  # to query the API too often if you respawn your environment too often
+  #
+  # Set default to your timezone
+  ltz = 'Europe/Paris'
+
+  # There is no clean way to set the ltz variable only in a trigger up
+  # case for a dirty way see:
+  # https://gist.github.com/jamiejackson/4ec92bef2e148d58d207b15f2c92b066
+#  config.trigger.before :up do |trigger|
+#    trigger.info = "Retrieving host timezone"
+#    trigger.ruby do |env,machine|
+      puts "Retrieving host timezone"
+      require 'uri'
+      require 'net/http'
+      require 'json'
+
+      begin
+        uri = URI('https://ipapi.co/timezone')
+        res = Net::HTTP.get_response(uri)
+        if res.is_a?(Net::HTTPSuccess)
+          ltz = res.body
+          puts "Timezone set from ipapi.co to: " + ltz
+        elsif res.is_a?(Net::HTTPTooManyRequests)
+          puts "Unable to get timezone from ipapi.co: trying fallback"
+          uri = URI('https://ipapi.co/json')
+          res = Net::HTTP.get_response(uri)
+          if res.is_a?(Net::HTTPSuccess)
+            jsres = JSON.parse(res.body)
+            if ! jsres['timezone'].to_s.strip.empty?
+              ltz = jsres['timezone']
+              puts "Timezone set from ipapi.co fallback to: " + ltz
+            else
+              puts "Unable to get timezone from ipapi.co fallback. Using default: " + ltz
+            end
+          elsif res.is_a?(Net::HTTPTooManyRequests)
+            puts "Unable to get timezone from ipapi.co fallback. Using default: " + ltz
+          else
+            puts "Unknown response received from ipapi.co: "
+            puts res
+    #        abort("Exiting")
+          end
+        else
+          puts "Unknown response received from ipapi.co: "
+          puts res
+    #      abort("Exiting")
+        end
+      rescue => e
+        puts e
+        abort("Exiting")
+      end
+#    end
+#  end
+
+  config.vm.box = "obourdon/flatcar-linux-observability"
+  config.vm.box_version = "2765.2.5"
+  config.vm.hostname = "flatcar-nomad"
+  # Flatcar Linux does not support VirtualBox Guest Additions therefore the copy
+  config.vm.provision "file", source: "./jobs", destination: "/tmp/jobs"
+  # Set the timezone the same as the host so that metrics & logs ingested have the right timestamp.
+  config.vm.provision :shell, :inline => "echo setting Timezone to " + ltz + "; sudo timedatectl set-timezone " + ltz, run: "always"
   config.vm.provision "shell", inline: $script, privileged: false
 
   # Expose the nomad api and ui to the host
@@ -197,11 +214,4 @@ Vagrant.configure(2) do |config|
       v.vmx["memsize"] = "2048"
     end
   end
-
-  # Set the timezone the same as the host so that metrics & logs ingested have the right timestamp.
-  require 'time'
-  offset = ((Time.zone_offset(Time.now.zone) / 60) / 60)
-  timezone_suffix = offset >= 0 ? "-#{offset.to_s}" : "+#{offset.to_s}"
-  timezone = 'Etc/GMT' + timezone_suffix
-  config.vm.provision :shell, :inline => "sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/" + timezone + " /etc/localtime", run: "always"
 end
