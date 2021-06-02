@@ -1,0 +1,211 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SCRIPT
+#
+# Nomad 1.x required due to Nomad jobs manifests
+#
+echo "Installing Nomad..."
+NOMAD_VERSION=1.0.5
+cd /tmp/
+if ! curl --fail -sSL https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip -o nomad.zip 2>/dev/null; then
+  echo "Failed to download Nomad $NOMAD_VERSION"
+  exit 1
+fi
+if ! unzip -q nomad.zip; then
+  echo "Failed to extract Nomad $NOMAD_VERSION"
+  exit 1
+fi
+sudo install nomad /opt/bin/nomad
+sudo mkdir -p /etc/nomad.d /etc/nomad /opt/nomad/data/
+# Error due to Flatcar default filesystems permissons restrictions
+#nomad -autocomplete-install
+(
+cat <<-EOF
+  [Unit]
+  Description=consul agent
+  Requires=network-online.target
+  After=network-online.target
+
+  [Service]
+  Restart=on-failure
+  ExecStart=/opt/bin/consul agent -dev -client=0.0.0.0
+  ExecReload=/bin/kill -HUP $MAINPID
+
+  [Install]
+  WantedBy=multi-user.target
+EOF
+) | sudo tee /etc/systemd/system/consul.service
+sudo systemctl enable consul.service
+sudo systemctl start consul
+
+(
+cat <<-EOF
+  data_dir  = "/opt/nomad/data/"
+  bind_addr = "0.0.0.0"
+  plugin "docker" {
+    config {
+      volumes {
+        enabled = true
+      }
+    }
+  }
+EOF
+  ) | sudo tee /etc/nomad/config.hcl
+(
+cat <<-EOF
+  [Unit]
+  Description=nomad dev agent
+  Requires=network-online.target
+  After=network-online.target
+
+  [Service]
+  Environment=PATH=/opt/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  Restart=on-failure
+  ExecStart=/opt/bin/nomad agent -dev-connect -config=/etc/nomad/config.hcl
+  ExecReload=/bin/kill -HUP $MAINPID
+
+  [Install]
+  WantedBy=multi-user.target
+EOF
+) | sudo tee /etc/systemd/system/nomad.service
+sudo systemctl enable nomad.service
+sudo systemctl start nomad
+
+echo "Setting up iptable to forward dns request to consul..."
+sudo iptables -t nat -A PREROUTING -p udp -m udp --dport 53 -j REDIRECT --to-ports 8600
+sudo iptables -t nat -A PREROUTING -p tcp -m tcp --dport 53 -j REDIRECT --to-ports 8600
+sudo iptables -t nat -A OUTPUT -d localhost -p udp -m udp --dport 53 -j REDIRECT --to-ports 8600
+sudo iptables -t nat -A OUTPUT -d localhost -p tcp -m tcp --dport 53 -j REDIRECT --to-ports 8600
+
+echo "Pulling Docker images"
+
+find /tmp/jobs -maxdepth 1 -type f -name '*.hcl' | xargs grep -E 'image\s*=\s*' | awk '{print $NF}' | sed -e 's/"//g' | while read j; do
+  echo "Pulling $j Docker image"
+  sudo docker pull $j >/dev/null
+done
+
+echo "Installing Grafana stack..."
+
+until nomad status
+do
+  echo "Waiting nomad to be ready...."
+  sleep 3
+done
+
+# Handle all Nomad job files one at a time
+# Use the naming of Nomad job files to determine scheduling order of services
+find /tmp/jobs -maxdepth 1 -type f -name '*.hcl' | sort | while read j; do
+  # Job can be successfully planed (enough resources left)
+  svc=$(basename $j | sed -e 's/\.nomad\.hcl//' -e 's/^[0-9][0-9]-//')
+  if nomad plan $j | grep -Eq 'All tasks successfully allocated'; then
+    echo "Scheduling $svc"
+    nomad run $j
+  else
+    echo "Error can not schedule $svc"
+  fi
+done
+SCRIPT
+
+Vagrant.configure(2) do |config|
+  #
+  # Get local host timezone
+  # PLEASE NOTE: the result can be tricked if you have any VPN
+  # or system-wide HTTP proxy configured on your Vagrant host
+  #
+  # PLEASE ALSO NOTE: the service at ipapi.co is protected from DDos
+  # by CloudFlare and therefore it might happen that you'll be denied
+  # to query the API too often if you respawn your environment too often
+  #
+  # Set default to your timezone
+  ltz = 'Europe/Paris'
+
+  # There is no clean way to set the ltz variable only in a trigger up
+  # case for a dirty way see:
+  # https://gist.github.com/jamiejackson/4ec92bef2e148d58d207b15f2c92b066
+#  config.trigger.before :up do |trigger|
+#    trigger.info = "Retrieving host timezone"
+#    trigger.ruby do |env,machine|
+      puts "Retrieving host timezone"
+      require 'uri'
+      require 'net/http'
+      require 'json'
+
+      begin
+        uri = URI('https://ipapi.co/timezone')
+        res = Net::HTTP.get_response(uri)
+        if res.is_a?(Net::HTTPSuccess)
+          ltz = res.body
+          puts "Timezone set from ipapi.co to: " + ltz
+        elsif res.is_a?(Net::HTTPTooManyRequests)
+          puts "Unable to get timezone from ipapi.co: trying fallback"
+          uri = URI('https://ipapi.co/json')
+          res = Net::HTTP.get_response(uri)
+          if res.is_a?(Net::HTTPSuccess)
+            jsres = JSON.parse(res.body)
+            if ! jsres['timezone'].to_s.strip.empty?
+              ltz = jsres['timezone']
+              puts "Timezone set from ipapi.co fallback to: " + ltz
+            else
+              puts "Unable to get timezone from ipapi.co fallback. Using default: " + ltz
+            end
+          elsif res.is_a?(Net::HTTPTooManyRequests)
+            puts "Unable to get timezone from ipapi.co fallback. Using default: " + ltz
+          else
+            puts "Unknown response received from ipapi.co: "
+            puts res
+    #        abort("Exiting")
+          end
+        else
+          puts "Unknown response received from ipapi.co: "
+          puts res
+    #      abort("Exiting")
+        end
+      rescue => e
+        puts e
+        abort("Exiting")
+      end
+#    end
+#  end
+
+  config.vm.box = "obourdon/flatcar-linux-observability"
+  config.vm.box_version = "2765.2.5"
+  config.vm.hostname = "flatcar-nomad"
+  # Flatcar Linux does not support VirtualBox Guest Additions therefore the copy
+  config.vm.provision "file", source: "./jobs", destination: "/tmp/jobs"
+  # Set the timezone the same as the host so that metrics & logs ingested have the right timestamp.
+  config.vm.provision :shell, :inline => "echo setting Timezone to " + ltz + "; sudo timedatectl set-timezone " + ltz, run: "always"
+  config.vm.provision "shell", inline: $script, privileged: false
+
+  # Expose the nomad api and ui to the host
+  config.vm.network "forwarded_port", guest: 4646, host: 4646
+  # consul
+  config.vm.network "forwarded_port", guest: 8500, host: 8500
+  # grafana
+  config.vm.network "forwarded_port", guest: 3000, host: 3000
+  # prometheus
+  config.vm.network "forwarded_port", guest: 9090, host: 9090
+  # loki
+  config.vm.network "forwarded_port", guest: 3100, host: 3100
+  # promtail
+  config.vm.network "forwarded_port", guest: 3200, host: 3200
+  # tns app
+  config.vm.network "forwarded_port", guest: 8001, host: 8001
+
+  # Increase memory for Parallels Desktop
+  config.vm.provider "parallels" do |p, o|
+    p.memory = "2048"
+  end
+
+  # Increase memory for Virtualbox
+  config.vm.provider "virtualbox" do |vb|
+        vb.memory = "2048"
+  end
+
+  # Increase memory for VMware
+  ["vmware_fusion", "vmware_workstation"].each do |p|
+    config.vm.provider p do |v|
+      v.vmx["memsize"] = "2048"
+    end
+  end
+end

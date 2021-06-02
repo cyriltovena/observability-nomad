@@ -30,6 +30,12 @@ To get started simply run:
 vagrant up
 ```
 
+In case you want a faster startup not based on Ubuntu but on Flatcar Linux (as CoreOS has been EOLed):
+
+```
+VAGRANT_VAGRANTFILE=Vagrantfile.flatcar vagrant up
+```
+
 Then you should be able to access:
 
 - TNS app    => http://127.0.0.1:8001/
