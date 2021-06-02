@@ -36,6 +36,22 @@ In case you want a faster startup not based on Ubuntu but on Flatcar Linux (as C
 VAGRANT_VAGRANTFILE=Vagrantfile.flatcar vagrant up
 ```
 
+**IMPORTANT NOTE**: Due to the new policies of Docker Hub image pulling,
+(see https://blog.container-solutions.com/dealing-with-docker-hub-rate-limiting)
+there may be cases where you will need to `docker login` to avoid getting error
+messages like:
+
+```
+Error response from daemon: toomanyrequests: You have reached your pull rate limit. You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
+```
+
+In order to use DockerHub login, you need to provide two additional environment variables
+as follows:
+
+```
+DOCKERHUBPASSWD=my-dockerhub-password DOCKERHUBID=my-dockerhub-login vagrant up
+```
+
 Then you should be able to access:
 
 - TNS app    => http://127.0.0.1:8001/

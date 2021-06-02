@@ -128,6 +128,14 @@ sudo iptables -t nat -A OUTPUT -d localhost -p tcp -m tcp --dport 53 -j REDIRECT
 
 echo "Pulling Docker images"
 
+if [ -n "$DOCKERHUBID" ] && [ -n "$DOCKERHUBPASSWD" ]; then
+  echo "Login to Docker Hub as $DOCKERHUBID"
+  if ! sudo docker login --username "$DOCKERHUBID" --password "$DOCKERHUBPASSWD"; then
+    echo 'Error login to Docker Hub'
+    exit 2
+  fi
+fi
+
 find /vagrant/jobs -maxdepth 1 -type f -name '*.hcl' | xargs grep -E 'image\s*=\s*' | awk '{print $NF}' | sed -e 's/"//g' | while read j; do
   echo "Pulling $j Docker image"
   if ! sudo docker pull $j >/dev/null; then
@@ -164,7 +172,7 @@ SCRIPT
 Vagrant.configure(2) do |config|
   config.vm.box = "bento/ubuntu-18.04" # 18.04 LTS
   config.vm.hostname = "ubuntu-nomad"
-  config.vm.provision "shell", inline: $script, privileged: false
+  config.vm.provision "shell", inline: $script, env: {"DOCKERHUBID"=>ENV['DOCKERHUBID'], "DOCKERHUBPASSWD"=>ENV['DOCKERHUBPASSWD']}, privileged: false
 
   # Expose the nomad api and ui to the host
   config.vm.network "forwarded_port", guest: 4646, host: 4646
