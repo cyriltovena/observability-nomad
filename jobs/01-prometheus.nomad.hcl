@@ -54,7 +54,7 @@ EOTC
         destination = "/local/prometheus.yml"
       }
       config {
-        image = "prom/prometheus"
+        image = "prom/prometheus:demo"
         ports = ["http"]
         args = [
           "--config.file=/local/prometheus.yml",

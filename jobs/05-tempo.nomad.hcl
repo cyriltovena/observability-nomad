@@ -39,7 +39,7 @@ job "tempo" {
         destination = "/local/tempo.yml"
       }
       config {
-        image = "grafana/tempo"
+        image = "grafana/tempo:demo"
         ports = ["tempo", "tempo-write"]
         args = [
           "-config.file=/local/tempo.yml",

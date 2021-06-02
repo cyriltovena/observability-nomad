@@ -31,7 +31,7 @@ job "loki" {
       }
 
       config {
-        image = "grafana/loki"
+        image = "grafana/loki:demo"
         ports = ["http"]
         args = [
           "-config.file",
