@@ -8,7 +8,7 @@ In this demonstration we will deploy an application ([TNS][TNS]) on [Nomad][noma
 
 - Prometheus **Metrics** using [client_golang][client_golang].
 - **Logs** using [gokit][gokit] (output format is [logfmt][logfmt]).
-- **Traces** using [jaeguer go client][jaeguer_client].
+- **Traces** using [jaeger go client][jaeger_client].
 
 > You can use the instrumentation of your choice such as: [OpenTelemetry][OpenTelemetry], [Zipkin][Zipkin], json logs...
 
@@ -96,7 +96,7 @@ Again in this example we're using a host path mounted in the container to persis
 [client_golang]: https://github.com/prometheus/client_golang
 [TNS]: https://github.com/grafana/tns
 [gokit]: https://github.com/go-kit/kit/tree/master/log
-[jaeguer_client]: https://github.com/jaegertracing/jaeger-client-go
+[jaeger_client]: https://github.com/jaegertracing/jaeger-client-go
 [logfmt]: https://brandur.org/logfmt
 [OpenTelemetry]: https://opentelemetry.io/
 [Zipkin]: https://zipkin.io/
