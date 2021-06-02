@@ -82,8 +82,14 @@ echo "Pulling Docker images"
 
 find /tmp/jobs -maxdepth 1 -type f -name '*.hcl' | xargs grep -E 'image\s*=\s*' | awk '{print $NF}' | sed -e 's/"//g' | while read j; do
   echo "Pulling $j Docker image"
-  sudo docker pull $j >/dev/null
+  if ! sudo docker pull $j >/dev/null; then
+    echo "Exiting"
+    exit 1
+  fi
 done
+if [ $? -ne 0 ]; then
+  exit 1
+fi
 
 echo "Installing Grafana stack..."
 
