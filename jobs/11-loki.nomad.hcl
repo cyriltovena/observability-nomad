@@ -47,7 +47,7 @@ job "loki" {
       service {
         name = "loki"
         port = "http"
-        tags = ["monitoring"]
+        tags = ["monitoring","prometheus"]
 
         check {
           name     = "Loki HTTP"

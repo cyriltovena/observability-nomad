@@ -20,6 +20,7 @@ sudo install nomad /opt/bin/nomad
 sudo mkdir -p /etc/nomad.d /etc/nomad /opt/nomad/data/
 # Error due to Flatcar default filesystems permissons restrictions
 #nomad -autocomplete-install
+# Consul service systemd startup script
 (
 cat <<-EOF
   [Unit]

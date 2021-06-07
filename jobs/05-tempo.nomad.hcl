@@ -55,7 +55,7 @@ job "tempo" {
       service {
         name = "tempo"
         port = "tempo"
-        tags = ["monitoring"]
+        tags = ["monitoring","prometheus"]
 
         check {
           name     = "Tempo HTTP"
