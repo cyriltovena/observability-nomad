@@ -73,7 +73,7 @@ EOTC
         tags = ["monitoring"]
 
         check {
-          name     = "prometheus HTTP"
+          name     = "Prometheus HTTP"
           type     = "http"
           path     = "/targets"
           interval = "5s"
