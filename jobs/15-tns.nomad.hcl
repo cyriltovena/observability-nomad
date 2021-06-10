@@ -38,7 +38,7 @@ job "tns" {
         JAEGER_SAMPLER_PARAM = "1"
       }
       config {
-        image = "grafana/tns-db"
+        image = "grafana/tns-db:demo"
         ports = ["db"]
 
         args = [
@@ -63,7 +63,7 @@ job "tns" {
         JAEGER_SAMPLER_PARAM = "1"
       }
       config {
-        image = "grafana/tns-app"
+        image = "grafana/tns-app:demo"
         ports = ["app"]
 
         args = [
@@ -89,7 +89,7 @@ job "tns" {
         JAEGER_SAMPLER_PARAM = "1"
       }
       config {
-        image = "grafana/tns-loadgen"
+        image = "grafana/tns-loadgen:demo"
         ports = ["loadgen"]
 
         args = [

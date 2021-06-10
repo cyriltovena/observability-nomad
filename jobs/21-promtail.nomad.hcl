@@ -69,7 +69,7 @@ EOTC
       }
 
       config {
-        image = "grafana/promtail"
+        image = "grafana/promtail:demo"
         ports = ["http"]
         args = [
           "-config.file=/local/promtail.yml",

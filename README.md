@@ -8,7 +8,7 @@ In this demonstration we will deploy an application ([TNS][TNS]) on [Nomad][noma
 
 - Prometheus **Metrics** using [client_golang][client_golang].
 - **Logs** using [gokit][gokit] (output format is [logfmt][logfmt]).
-- **Traces** using [jaeguer go client][jaeguer_client].
+- **Traces** using [jaeger go client][jaeger_client].
 
 > You can use the instrumentation of your choice such as: [OpenTelemetry][OpenTelemetry], [Zipkin][Zipkin], json logs...
 
@@ -34,6 +34,22 @@ In case you want a faster startup not based on Ubuntu but on Flatcar Linux (as C
 
 ```
 VAGRANT_VAGRANTFILE=Vagrantfile.flatcar vagrant up
+```
+
+**IMPORTANT NOTE**: Due to the new policies of Docker Hub image pulling,
+(see https://blog.container-solutions.com/dealing-with-docker-hub-rate-limiting)
+there may be cases where you will need to `docker login` to avoid getting error
+messages like:
+
+```
+Error response from daemon: toomanyrequests: You have reached your pull rate limit. You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit
+```
+
+In order to use DockerHub login, you need to provide two additional environment variables
+as follows:
+
+```
+DOCKERHUBPASSWD=my-dockerhub-password DOCKERHUBID=my-dockerhub-login vagrant up
 ```
 
 Then you should be able to access:
@@ -80,7 +96,7 @@ Again in this example we're using a host path mounted in the container to persis
 [client_golang]: https://github.com/prometheus/client_golang
 [TNS]: https://github.com/grafana/tns
 [gokit]: https://github.com/go-kit/kit/tree/master/log
-[jaeguer_client]: https://github.com/jaegertracing/jaeger-client-go
+[jaeger_client]: https://github.com/jaegertracing/jaeger-client-go
 [logfmt]: https://brandur.org/logfmt
 [OpenTelemetry]: https://opentelemetry.io/
 [Zipkin]: https://zipkin.io/
