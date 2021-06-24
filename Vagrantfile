@@ -172,7 +172,7 @@ find /vagrant/jobs -maxdepth 1 -type f -name '*.hcl' | sort | while read j; do
   svc=$(basename $j | sed -e 's/\.nomad\.hcl//' -e 's/^[0-9][0-9]-//')
   if nomad plan $j | grep -Eq 'All tasks successfully allocated'; then
     echo "Scheduling $svc"
-    nomad run $j
+    nomad run -detach $j
   else
     echo "Error can not schedule $svc"
   fi
