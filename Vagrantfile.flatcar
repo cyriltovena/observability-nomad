@@ -6,17 +6,6 @@ $script = <<SCRIPT
 # Nomad 1.x required due to Nomad jobs manifests
 #
 echo "Installing Nomad..."
-NOMAD_VERSION=1.1.1
-cd /tmp/
-if ! curl --fail -sSL https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip -o nomad.zip 2>/dev/null; then
-  echo "Failed to download Nomad $NOMAD_VERSION"
-  exit 1
-fi
-if ! unzip -q nomad.zip; then
-  echo "Failed to extract Nomad $NOMAD_VERSION"
-  exit 1
-fi
-sudo install nomad /opt/bin/nomad
 sudo mkdir -p /etc/nomad.d /etc/nomad /opt/nomad/data/
 # Error due to Flatcar default filesystems permissons restrictions
 #nomad -autocomplete-install
@@ -194,7 +183,7 @@ Vagrant.configure(2) do |config|
 #  end
 
   config.vm.box = "obourdon/flatcar-linux-observability"
-  config.vm.box_version = "2765.2.5"
+  config.vm.box_version = "2765.2.6"
   config.vm.hostname = "flatcar-nomad"
   # Flatcar Linux does not support VirtualBox Guest Additions therefore the copy
   config.vm.provision "file", source: "./jobs", destination: "/tmp/jobs"
