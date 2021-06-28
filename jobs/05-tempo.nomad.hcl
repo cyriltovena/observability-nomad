@@ -34,7 +34,7 @@ job "tempo" {
       }
 
       artifact {
-        source      = "https://raw.githubusercontent.com/grafana/tempo/master/example/docker-compose/etc/tempo-local.yaml"
+        source      = "https://raw.githubusercontent.com/grafana/tempo/master/example/docker-compose/local/tempo-local.yaml"
         mode        = "file"
         destination = "/local/tempo.yml"
       }
@@ -55,7 +55,7 @@ job "tempo" {
       service {
         name = "tempo"
         port = "tempo"
-        tags = ["monitoring"]
+        tags = ["monitoring","prometheus"]
 
         check {
           name     = "Tempo HTTP"

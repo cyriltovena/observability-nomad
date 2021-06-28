@@ -6,20 +6,10 @@ $script = <<SCRIPT
 # Nomad 1.x required due to Nomad jobs manifests
 #
 echo "Installing Nomad..."
-NOMAD_VERSION=1.0.5
-cd /tmp/
-if ! curl --fail -sSL https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip -o nomad.zip 2>/dev/null; then
-  echo "Failed to download Nomad $NOMAD_VERSION"
-  exit 1
-fi
-if ! unzip -q nomad.zip; then
-  echo "Failed to extract Nomad $NOMAD_VERSION"
-  exit 1
-fi
-sudo install nomad /opt/bin/nomad
 sudo mkdir -p /etc/nomad.d /etc/nomad /opt/nomad/data/
 # Error due to Flatcar default filesystems permissons restrictions
 #nomad -autocomplete-install
+# Consul service systemd startup script
 (
 cat <<-EOF
   [Unit]
@@ -124,7 +114,7 @@ find /tmp/jobs -maxdepth 1 -type f -name '*.hcl' | sort | while read j; do
   svc=$(basename $j | sed -e 's/\.nomad\.hcl//' -e 's/^[0-9][0-9]-//')
   if nomad plan $j | grep -Eq 'All tasks successfully allocated'; then
     echo "Scheduling $svc"
-    nomad run $j
+    nomad run -detach $j
   else
     echo "Error can not schedule $svc"
   fi
@@ -193,7 +183,7 @@ Vagrant.configure(2) do |config|
 #  end
 
   config.vm.box = "obourdon/flatcar-linux-observability"
-  config.vm.box_version = "2765.2.5"
+  config.vm.box_version = "2765.2.6"
   config.vm.hostname = "flatcar-nomad"
   # Flatcar Linux does not support VirtualBox Guest Additions therefore the copy
   config.vm.provision "file", source: "./jobs", destination: "/tmp/jobs"

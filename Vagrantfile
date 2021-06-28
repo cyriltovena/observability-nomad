@@ -25,7 +25,7 @@ sudo docker --version
 sudo apt-get install unzip curl vim -y
 
 echo "Installing Nomad..."
-NOMAD_VERSION=1.0.5
+NOMAD_VERSION=1.1.2
 cd /tmp/
 if ! curl --fail -sSL https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip -o nomad.zip 2>/dev/null; then
   echo "Failed to download Nomad $NOMAD_VERSION"
@@ -49,7 +49,7 @@ sudo mkdir -p /opt/cni/bin
 sudo tar -C /opt/cni/bin -xzf cni-plugins.tgz
 
 echo "Installing Consul..."
-CONSUL_VERSION=1.9.5
+CONSUL_VERSION=1.10.0
 if ! curl --fail -sSL https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip > consul.zip 2>/dev/null; then
   echo "Failed to download Consul $CONSUL_VERSION"
   exit 1
@@ -172,7 +172,7 @@ find /vagrant/jobs -maxdepth 1 -type f -name '*.hcl' | sort | while read j; do
   svc=$(basename $j | sed -e 's/\.nomad\.hcl//' -e 's/^[0-9][0-9]-//')
   if nomad plan $j | grep -Eq 'All tasks successfully allocated'; then
     echo "Scheduling $svc"
-    nomad run $j
+    nomad run -detach $j
   else
     echo "Error can not schedule $svc"
   fi

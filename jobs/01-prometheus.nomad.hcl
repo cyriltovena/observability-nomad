@@ -41,6 +41,9 @@ scrape_configs:
         target_label:  'task_id'
         replacement: '$1'
       - source_labels: [__meta_consul_tags]
+        regex: '.*,prometheus,.*'
+        action: keep
+      - source_labels: [__meta_consul_tags]
         regex: ',(app|monitoring),'
         target_label:  'group'
         replacement:   '$1'
@@ -70,10 +73,10 @@ EOTC
       service {
         name = "prometheus"
         port = "http"
-        tags = ["monitoring"]
+        tags = ["monitoring","prometheus"]
 
         check {
-          name     = "prometheus HTTP"
+          name     = "Prometheus HTTP"
           type     = "http"
           path     = "/targets"
           interval = "5s"

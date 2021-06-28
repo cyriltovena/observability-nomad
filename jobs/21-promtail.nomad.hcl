@@ -89,7 +89,7 @@ EOTC
       service {
         name = "promtail"
         port = "http"
-        tags = ["monitoring"]
+        tags = ["monitoring","prometheus"]
 
         check {
           name     = "Promtail HTTP"

@@ -84,7 +84,7 @@ EOTC
       service {
         name = "grafana"
         port = "http"
-        tags = ["monitoring"]
+        tags = ["monitoring","prometheus"]
 
         check {
           name     = "Grafana HTTP"

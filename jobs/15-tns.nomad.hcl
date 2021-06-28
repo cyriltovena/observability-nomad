@@ -50,7 +50,7 @@ job "tns" {
       service {
         name = "db"
         port = "db"
-        tags = ["app"]
+        tags = ["app","prometheus"]
       }
     }
 
@@ -76,7 +76,7 @@ job "tns" {
       service {
         name = "app"
         port = "app"
-        tags = ["app"]
+        tags = ["app","prometheus"]
       }
     }
 
@@ -102,7 +102,7 @@ job "tns" {
       service {
         name = "loadgen"
         port = "loadgen"
-        tags = ["app"]
+        tags = ["app","prometheus"]
       }
     }
   }
