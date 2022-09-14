@@ -12,8 +12,15 @@ job "tempo" {
       port "tempo" {
           static = "3400"
       }
-      port "tempo-write" {
+      port "tempo_grpc" {
+          static = "9095"
+      }
+      port "tempo_write" {
         static = "6831"
+      }
+      port "tempo_otel_grpc" {
+        static = "4217"
+        to = "4317"
       }
     }
 
@@ -38,7 +45,8 @@ job "tempo" {
 metrics_generator_enabled: true
 
 server:
-  http_listen_port: 3200
+  http_listen_port: {{ env "NOMAD_PORT_tempo" }}
+  grpc_listen_port: {{ env "NOMAD_PORT_tempo_grpc" }}
 
 distributor:
   receivers:                           # this configuration will listen on all ports and protocols that tempo is capable of.
@@ -105,10 +113,9 @@ search_enabled: true
       
       config {
         image = "grafana/tempo:latest"
-        ports = ["tempo", "tempo-write"]
+        ports = ["tempo", "tempo_write", "tempo_otel_grpc","tempo_grpc"]
         args = [
-          "-config.file=/local/tempo.yml",
-          "-server.http-listen-port=${NOMAD_PORT_tempo}",
+          "-config.file=/local/tempo.yml"
         ]
       }
 

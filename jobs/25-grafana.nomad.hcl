@@ -71,8 +71,8 @@ datasources:
         datasourceUid: prom
         tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
         queries:
-          - name: 'Sample query'
-            query: 'sum(rate(tempo_spanmetrics_latency_bucket{$__tags}[5m]))'
+          - name: 'Span Latency Query'
+            query: 'sum(rate(traces_spanmetrics_latency_bucket{$__tags}[5m]))'
       serviceMap:
         datasourceUid: 'prom'
       search:
@@ -95,13 +95,19 @@ datasources:
 EOTC
         destination = "/local/grafana/provisioning/datasources/ds.yaml"
       }
+      template {
+        data  = <<ETOC
+
+ETOC
+        destination = "/local/grafana/config/custom.ini"
+      }
       artifact {
-        source      = "https://raw.githubusercontent.com/cyriltovena/observability-nomad/main/provisioning/dashboard.yaml"
+        source      = "https://raw.githubusercontent.com/alfkonee/observability-nomad/main/provisioning/dashboard.yaml"
         mode        = "file"
         destination = "/local/grafana/provisioning/dashboards/dashboard.yaml"
       }
       artifact {
-        source      = "https://raw.githubusercontent.com/cyriltovena/observability-nomad/main/provisioning/dashboard.json"
+        source      = "https://raw.githubusercontent.com/alfkonee/observability-nomad/main/provisioning/dashboard.json"
         mode        = "file"
         destination = "/local/grafana/dashboards/tns.json"
       }
