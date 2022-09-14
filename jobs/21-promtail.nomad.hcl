@@ -8,7 +8,7 @@ job "promtail" {
 
     network {
       dns {
-        servers = ["172.17.0.1", "8.8.8.8", "8.8.4.4"]
+        servers = ["192.168.100.80", "1.0.0.1", "8.8.4.4"]
       }
       port "http" {
         static = 3200
@@ -38,7 +38,8 @@ clients:
 scrape_configs:
 - job_name: 'nomad-logs'
   consul_sd_configs:
-    - server: '172.17.0.1:8500'
+    - server: '192.168.100.80:8500'
+      token: '[REPLACE_WITH_CONSUL_TOKEN]'
   relabel_configs:
     - source_labels: [__meta_consul_node]
       target_label: __host__
@@ -69,7 +70,7 @@ EOTC
       }
 
       config {
-        image = "grafana/promtail:demo"
+        image = "grafana/promtail:latest"
         ports = ["http"]
         args = [
           "-config.file=/local/promtail.yml",

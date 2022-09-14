@@ -7,10 +7,11 @@ job "prometheus" {
 
     network {
       dns {
-        servers = ["172.17.0.1", "8.8.8.8", "8.8.4.4"]
+        servers = ["192.168.100.80", "1.0.0.1", "8.8.4.4"]
       }
       port "http" {
-        static = 9090
+        static = 9091
+        
       }
     }
 
@@ -30,7 +31,8 @@ global:
 scrape_configs:
   - job_name: 'self'
     consul_sd_configs:
-      - server: '172.17.0.1:8500'
+      - server: 'consul.service.consul:8500'
+        token: '[REPLACE_WITH_CONSUL_TOKEN]'
     relabel_configs:
       - source_labels: [__meta_consul_service_metadata_external_source]
         target_label: source
@@ -57,11 +59,13 @@ EOTC
         destination = "/local/prometheus.yml"
       }
       config {
-        image = "prom/prometheus:demo"
+        image = "prom/prometheus:latest"
         ports = ["http"]
         args = [
           "--config.file=/local/prometheus.yml",
-          "--web.enable-admin-api"
+          "--web.enable-admin-api",
+          "--web.enable-remote-write-receiver",
+          "--web.listen-address=:9091",
         ]
       }
 

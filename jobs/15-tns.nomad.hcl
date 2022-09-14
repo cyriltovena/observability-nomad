@@ -7,7 +7,7 @@ job "tns" {
 
     network {
       dns {
-        servers = ["172.17.0.1", "8.8.8.8", "8.8.4.4"]
+        servers = ["192.168.100.80", "1.0.0.1", "8.8.4.4"]
       }
       port "db" {
         static = 8000
@@ -38,7 +38,7 @@ job "tns" {
         JAEGER_SAMPLER_PARAM = "1"
       }
       config {
-        image = "grafana/tns-db:demo"
+        image = "grafana/tns-db:latest"
         ports = ["db"]
 
         args = [
@@ -63,7 +63,7 @@ job "tns" {
         JAEGER_SAMPLER_PARAM = "1"
       }
       config {
-        image = "grafana/tns-app:demo"
+        image = "grafana/tns-app:latest"
         ports = ["app"]
 
         args = [
@@ -89,7 +89,7 @@ job "tns" {
         JAEGER_SAMPLER_PARAM = "1"
       }
       config {
-        image = "grafana/tns-loadgen:demo"
+        image = "grafana/tns-loadgen:latest"
         ports = ["loadgen"]
 
         args = [

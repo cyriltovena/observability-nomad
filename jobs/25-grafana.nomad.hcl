@@ -7,7 +7,7 @@ job "grafana" {
 
     network {
       dns {
-        servers = ["172.17.0.1", "8.8.8.8", "8.8.4.4"]
+        servers = ["192.168.100.80", "1.0.0.1", "8.8.4.4"]
       }
       port "http" {
         static = 3000
@@ -24,7 +24,7 @@ job "grafana" {
       driver = "docker"
 
       config {
-        image = "grafana/grafana:7.5.1"
+        image = "grafana/grafana:latest"
         ports = ["http"]
       }
 
@@ -38,11 +38,15 @@ job "grafana" {
       template {
         data        = <<EOTC
 apiVersion: 1
+deleteDatasources:
+  - name: Tempo
+  - name: Prometheus
 datasources:
   - name: Prometheus
     type: prometheus
+    uid: prom 
     access: proxy
-    url: http://prometheus.service.dc1.consul:9090
+    url: http://prometheus.service.dc1.consul:9091
     jsonData:
       exemplarTraceIdDestinations:
       - name: traceID
@@ -52,9 +56,35 @@ datasources:
     access: proxy
     url: http://tempo.service.dc1.consul:3400
     uid: tempo
+    jsonData:
+      httpMethod: GET
+      tracesToLogs:
+        datasourceUid: 'loki'
+        tags: ['job', 'instance', 'pod', 'namespace']
+        mappedTags: [{ key: 'service.name', value: 'service' }]
+        mapTagNamesEnabled: false
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: false
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: prom
+        tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+        queries:
+          - name: 'Sample query'
+            query: 'sum(rate(tempo_spanmetrics_latency_bucket{$__tags}[5m]))'
+      serviceMap:
+        datasourceUid: 'prom'
+      search:
+        hide: false
+      nodeGraph:
+        enabled: true
+      lokiSearch:
+        datasourceUid: 'loki'
   - name: Loki
     type: loki
     access: proxy
+    uid: loki
     url: http://loki.service.dc1.consul:3100
     jsonData:
       derivedFields:

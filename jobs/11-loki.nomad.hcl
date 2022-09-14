@@ -7,7 +7,7 @@ job "loki" {
 
     network {
       dns {
-        servers = ["172.17.0.1", "8.8.8.8", "8.8.4.4"]
+        servers = ["192.168.100.80", "1.0.0.1", "8.8.4.4"]
       }
       port "http" {
         static = 3100
@@ -31,7 +31,7 @@ job "loki" {
       }
 
       config {
-        image = "grafana/loki:demo"
+        image = "grafana/loki:latest"
         ports = ["http"]
         args = [
           "-config.file",
